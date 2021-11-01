@@ -5,13 +5,17 @@
 const recipes = [
   'https://introweb.tech/assets/json/ghostCookies.json',
   'https://introweb.tech/assets/json/birthdayCake.json',
-  'https://introweb.tech/assets/json/chocolateChip.json'
+  'https://introweb.tech/assets/json/chocolateChip.json',
+  'assets/recipes/chickenSaag.json',
+  'assets/recipes/mapoTofu.json',
+  'assets/recipes/smokedSalmon.json'
 ];
 
 // Once all of the recipes that were specified above have been fetched, their
 // data will be added to this object below. You may use whatever you like for the
 // keys as long as it's unique, one suggestion might but the URL itself
 const recipeData = {}
+let expanded = false;
 
 window.addEventListener('DOMContentLoaded', init);
 
@@ -50,16 +54,16 @@ async function fetchRecipes() {
         recipeURL.lastIndexOf('/') + 1,
         recipeURL.lastIndexOf('.')
       );
-      let fetchRequest = fetch(recipeURL)
-      .then(response => response.json())
-      .then(data => {
-        recipeData[recipeName] = data
-      })
-      .then(() => {if (Object.keys(recipeData).length == recipes.length) resolve(true)})
-      .catch(() => {
-        console.log(`ERR: Fetching recipe for ${recipeName} unsuccessful.`);
-        reject(false);
-      });
+      fetch(recipeURL)
+        .then(response => response.json())
+        .then(data => {
+          recipeData[recipeName] = data
+        })
+        .then(() => {if (Object.keys(recipeData).length == recipes.length) resolve(true)})
+        .catch(() => {
+          console.log(`ERR: Fetching recipe for ${recipeName} unsuccessful.`);
+          reject(false);
+        });
     }
   });
 }
@@ -73,9 +77,12 @@ function createRecipeCards() {
 
   // Part 1 Expose - TODO
   const main = document.querySelector('body main');
+  let ctr = 0;
   for (const key in recipeData) {
+    if (ctr++ == 3) break;
     const element = document.createElement('recipe-card');
     element.data = recipeData[key];
+    element.setAttribute('id', `${key}-recipe-card`);
     main.append(element);
   }
 }
@@ -89,4 +96,48 @@ function bindShowMore() {
   // in the recipeData object where you stored them/
 
   // Part 2 Explore - TODO
+  const expandButton = document.querySelector('#button-wrapper button');
+  expandButton.addEventListener('click', () => {
+    let newText;
+    if (expanded) {
+      newText = 'Show more';
+      hideExtraRecipes();
+    } else {
+      newText = 'Show less';
+      showExtraRecipes();
+    }
+    expandButton.textContent = newText;
+    expanded = !expanded;
+  })
+  /* const main = document.querySelector('body main');
+  let ctr = 0;
+  for (const key in recipeData) {
+    if (ctr++ < 3) continue;
+    const element = document.createElement('recipe-card');
+    element.data = recipeData[key];
+    main.append(element);
+  } */
+}
+
+const hideExtraRecipes = () => {
+  const main = document.querySelector('body main');
+  let ctr = 0;
+  const recipeCards = document.querySelectorAll('body main recipe-card');
+  for (const key in recipeData) {
+    if (ctr++ < 3) continue;
+    const element = document.getElementById(`${key}-recipe-card`);
+    element.remove();
+  }
+}
+
+const showExtraRecipes = () => {
+  const main = document.querySelector('body main');
+  let ctr = 0;
+  for (const key in recipeData) {
+    if (ctr++ < 3) continue;
+    const element = document.createElement('recipe-card');
+    element.data = recipeData[key];
+    element.setAttribute('id', `${key}-recipe-card`);
+    main.append(element);
+  }
 }
