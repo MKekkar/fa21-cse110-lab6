@@ -18,12 +18,13 @@ window.addEventListener('DOMContentLoaded', init);
 // This is the first function to be called, so when you are tracing your code start here.
 async function init() {
   // fetch the recipes and wait for them to load
-  let fetchSuccessful = await fetchRecipes();
-  // if they didn't successfully load, quit the function
-  if (!fetchSuccessful) {
-    console.log('Recipe fetch unsuccessful');
-    return;
-  };
+  let fetchSuccessful = await fetchRecipes().catch(fetchSuccess => {
+    // if they didn't successfully load, quit the function
+    if (!fetchSuccess) {
+      console.log('Recipe fetch unsuccessful');
+      return;
+    }
+  });
   // Add the first three recipe cards to the page
   createRecipeCards();
   // Make the "Show more" button functional
@@ -43,6 +44,23 @@ async function fetchRecipes() {
     // in the recipes folder and fetch them from there. You'll need to add their paths to the recipes array.
 
     // Part 1 Expose - TODO
+    for (let i = 0; i < recipes.length; i++) {
+      const recipeURL = recipes[i];
+      const recipeName = recipeURL.substring(
+        recipeURL.lastIndexOf('/') + 1,
+        recipeURL.lastIndexOf('.')
+      );
+      let fetchRequest = fetch(recipeURL)
+      .then(response => response.json())
+      .then(data => {
+        recipeData[recipeName] = data
+      })
+      .then(() => {if (Object.keys(recipeData).length == recipes.length) resolve(true)})
+      .catch(() => {
+        console.log(`ERR: Fetching recipe for ${recipeName} unsuccessful.`);
+        reject(false);
+      });
+    }
   });
 }
 
@@ -54,6 +72,12 @@ function createRecipeCards() {
   // show any others you've added when the user clicks on the "Show more" button.
 
   // Part 1 Expose - TODO
+  const main = document.querySelector('body main');
+  for (const key in recipeData) {
+    const element = document.createElement('recipe-card');
+    element.data = recipeData[key];
+    main.append(element);
+  }
 }
 
 function bindShowMore() {
